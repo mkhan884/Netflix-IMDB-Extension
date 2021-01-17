@@ -1,7 +1,10 @@
+/**
+ * Just to make sure that the scripts are working on the extension.
+ */
 alert("Chrome extension linked to Netflix.");
 
 /**
- * Event listener that runs the main function everytime the url changes.
+ * Event listener that runs the 'getTitleName' function everytime the url updates.
  */
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
@@ -26,15 +29,29 @@ function getTitleName (){
     var titleYear = yearDOM.innerHTML;
     //console.log(titleYear);
 
-    var nameYear = titleName + ";" + titleYear;
-    console.log(nameYear);
-
+    var updatedTitle = titleName.replace(/ /g, "+");
+    getSecondIMDB(updatedTitle).then(data => {
+        var ratingsArray = data.Ratings;
+        var ratingJSON = ratingsArray[0];
+        var ratingValue = ratingJSON.Value;
+        var ratingSplit = ratingValue.split("/");
+        var rating = ratingSplit[0];
+        //console.log(rating);
+        addIMDBRating(rating);
+    })
+    .catch(error => console.log(error));
 }
 
-function getIDMB (title, year){
-    var request = new XMLHttpRequest();
-    request.open('GET', "http://www.omdbapi.com/?t="+encodeURI(title)+"&apikey=8d0db952");
-    request.onload = function (){
-        console.log("Api request is working.")
-    }
+async function getSecondIMDB(title){
+    let response = await fetch('https://www.omdbapi.com/?t='+title+'&apikey=8d0db952');
+    let data = await response.json();
+    return data;
+}
+
+function addIMDBRating(rating){
+    var infoContainer = document.querySelector('.videoMetadata--container');
+    var div = document.createElement('div');
+    div.className = 'imdbRating';
+    div.innerHTML = 'IMDB: ' + rating;
+    infoContainer.appendChild(div);
 }
